@@ -3,50 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>성셈의 상속세 시뮬레이터</title>
+    <title>상속세 전략 분석 리포트</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        :root { --primary: #1e293b; --accent: #eab308; --danger: #ef4444; --bg: #f8fafc; }
+        :root { --primary: #1e293b; --accent: #eab308; --danger: #ef4444; --bg: #f8fafc; --border: #e2e8f0; }
         body { font-family: 'Pretendard', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #334155; }
         
-        .container { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 350px 1fr; gap: 25px; }
-        @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+        /* 레이아웃: 데스크탑 2단 / 모바일 1단 */
+        .container { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 350px 1fr; gap: 20px; }
+        @media (max-width: 900px) { .container { grid-template-columns: 1fr; } body { padding: 10px; } }
 
-        /* 카드 스타일 (첫 번째 이미지 디자인) */
-        .panel { background: white; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        h2 { border-left: 4px solid var(--accent); padding-left: 12px; margin-bottom: 25px; font-size: 1.2rem; color: var(--primary); }
+        .panel { background: white; padding: 25px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); box-sizing: border-box; }
+        h2 { border-left: 4px solid var(--accent); padding-left: 12px; margin-bottom: 25px; font-size: 1.15rem; color: var(--primary); }
         
         .input-group { margin-bottom: 15px; }
         label { display: block; font-size: 0.85rem; margin-bottom: 6px; font-weight: 600; color: #64748b; }
         input[type="number"], select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 15px; box-sizing: border-box; }
         
-        /* 리포트 상단 3개 요약 카드 */
-        .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-        .stat-card { background: white; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; text-align: center; }
+        /* [핵심] 첫 번째 화면의 3구역 요약 카드 디자인 */
+        .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 25px; }
+        .stat-card { background: white; padding: 18px 10px; border-radius: 10px; border: 1px solid var(--border); text-align: center; }
         .stat-card.red { border: 1px solid var(--danger); }
-        .stat-label { font-size: 0.75rem; color: #64748b; margin-bottom: 5px; }
-        .stat-value { font-size: 1.25rem; font-weight: 800; }
+        .stat-label { font-size: 0.75rem; color: #64748b; margin-bottom: 8px; }
+        .stat-value { font-size: 1.2rem; font-weight: 800; color: var(--primary); }
         .stat-value.red { color: var(--danger); }
 
-        /* 차트 영역 */
-        .chart-box { height: 250px; border: 1px solid #f1f5f9; border-radius: 10px; display: flex; align-items: flex-end; justify-content: space-around; padding: 40px 20px 30px; position: relative; margin-bottom: 20px; }
-        .bar-wrap { width: 60px; display: flex; flex-direction: column; align-items: center; position: relative; }
-        .bar { width: 100%; background: #e2e8f0; border-radius: 4px 4px 0 0; transition: height 0.4s ease; position: relative; }
-        .bar.active { background: var(--primary); }
+        /* 그래프 영역 */
+        .chart-box { height: 260px; border: 1px solid #f1f5f9; border-radius: 10px; display: flex; align-items: flex-end; justify-content: space-around; padding: 40px 20px 30px; position: relative; margin-bottom: 25px; }
+        .bar-wrap { width: 70px; display: flex; flex-direction: column; align-items: center; position: relative; }
+        .bar { width: 100%; background: #e2e8f0; border-radius: 4px 4px 0 0; transition: height 0.5s ease; position: relative; }
+        .bar.active { background: #1e293b; }
         .bar.future { background: #64748b; }
         .bar.warning { background: var(--danger); }
-        .bar-v { position: absolute; top: -22px; width: 100%; text-align: center; font-size: 0.8rem; font-weight: 700; }
-        .bar-l { position: absolute; bottom: -25px; width: 120px; text-align: center; font-size: 0.75rem; color: #64748b; }
+        .bar-v { position: absolute; top: -25px; width: 100%; text-align: center; font-size: 0.8rem; font-weight: 700; }
+        .bar-l { position: absolute; bottom: -28px; width: 120px; text-align: center; font-size: 0.75rem; color: #94a3b8; }
 
-        .info-box { background: #f1f5f9; padding: 15px; border-radius: 8px; font-size: 0.85rem; line-height: 1.6; }
-        .btn-save { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 6px; cursor: pointer; font-weight: 700; width: 100%; margin-top: 15px; }
+        .guide-box { background: #f1f5f9; padding: 18px; border-radius: 10px; font-size: 0.85rem; line-height: 1.7; }
+        .btn-action { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: 700; width: 100%; margin-top: 15px; font-size: 1rem; }
+        
+        .check-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .check-group label { font-size: 0.8rem; display: flex; align-items: center; gap: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="panel">
+    <div class="panel no-print">
         <h2>자산 데이터 입력</h2>
         <div class="input-group"><label>부동산 가액 (억 원)</label><input type="number" id="re" value="40" oninput="update()"></div>
         <div class="input-group"><label>금융 자산 (억 원)</label><input type="number" id="cash" value="10" oninput="update()"></div>
@@ -56,24 +59,24 @@
         
         <div class="input-group">
             <label>보험금 / 사전증여액 (억 원)</label>
-            <div style="display: flex; gap: 5px;">
+            <div style="display: flex; gap: 8px;">
                 <input type="number" id="ins" value="5" oninput="update()" placeholder="보험">
                 <input type="number" id="gift" value="5" oninput="update()" placeholder="증여">
             </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+        <div class="check-group">
             <label><input type="checkbox" id="sp" checked onchange="update()"> 배우자 있음</label>
             <label><input type="checkbox" id="bz" onchange="update()"> 가업상속공제</label>
             <label><input type="checkbox" id="lt" onchange="update()"> 동거주택공제</label>
         </div>
-        <button class="btn-save" onclick="downloadPDF()">리포트 PDF 저장하기</button>
+        <button class="btn-action" onclick="downloadPDF()">리포트 PDF 저장하기</button>
     </div>
 
     <div class="panel" id="report">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h2 style="margin:0; border:none; padding:0;">상속세 전략 분석 리포트</h2>
-            <span style="font-size:0.7rem; color:#cbd5e1;">Confidential</span>
+            <span style="font-size:0.7rem; color:#cbd5e1; letter-spacing: 1px;">Confidential</span>
         </div>
 
         <div class="summary-grid">
@@ -98,7 +101,7 @@
             </div>
             <div class="bar-wrap">
                 <div class="bar future" id="b2"><div class="bar-v" id="v2">0억</div></div>
-                <div class="bar-l">10년후 세액</div>
+                <div class="bar-l">10년후 예상</div>
             </div>
             <div class="bar-wrap">
                 <div class="bar warning" id="b3"><div class="bar-v" id="v3">0억</div></div>
@@ -106,11 +109,12 @@
             </div>
         </div>
 
-        <div class="info-box" id="msg">데이터를 입력하면 전문가 가이드가 생성됩니다.</div>
+        <div class="guide-box" id="msg">데이터를 입력해 주세요.</div>
     </div>
 </div>
 
 <script>
+// 세액 계산 알고리즘
 function calc(base) {
     if (base <= 0) return 0;
     if (base <= 1) return base * 0.1;
@@ -121,7 +125,7 @@ function calc(base) {
 }
 
 function update() {
-    // 값 가져오기 (오타 수정 완료)
+    // 1. 데이터 추출
     const re = parseFloat(document.getElementById('re').value) || 0;
     const cash = parseFloat(document.getElementById('cash').value) || 0;
     const debt = parseFloat(document.getElementById('debt').value) || 0;
@@ -133,21 +137,22 @@ function update() {
     const isBz = document.getElementById('bz').checked;
     const isLt = document.getElementById('lt').checked;
 
-    // 1. 현재 계산
+    // 2. 현재 시점 계산
     const net = (re + cash) - debt;
-    const d_base = 5;
+    const d_base = 5; 
     const d_cash = Math.min(Math.max((cash - debt) * 0.2, 0), 2);
     const d_etc = (isLt ? Math.min(re * 0.8, 6) : 0) + (isBz ? 100 : 0);
     const d_sp = hasSp ? Math.max(5, Math.min(net * (1.5 / (1.5 + child)), 30)) : 0;
     const total_d = d_base + d_cash + d_etc + d_sp;
+    
     const tax_now = calc(net - total_d);
 
-    // 2. 미래 계산 (10년)
+    // 3. 미래(10년) 시뮬레이션
     const re_f = re * Math.pow(1 + growth, 10);
     const tax_f = calc((re_f + cash - debt) - total_d);
     const gap = Math.max(0, tax_f - ins - cash);
 
-    // 3. 화면 업데이트 (숫자 반영)
+    // 4. UI 숫자 반영
     document.getElementById('res_net').innerText = net.toFixed(1);
     document.getElementById('res_ded').innerText = total_d.toFixed(1);
     document.getElementById('res_tax').innerText = tax_now.toFixed(1);
@@ -156,13 +161,14 @@ function update() {
     document.getElementById('v2').innerText = tax_f.toFixed(1) + "억";
     document.getElementById('v3').innerText = gap.toFixed(1) + "억";
 
-    // 4. 차트 애니메이션
+    // 5. 차트 높이 조절
     const max = Math.max(tax_now, tax_f, gap, 1);
     document.getElementById('b1').style.height = (tax_now / max * 100) + "%";
     document.getElementById('b2').style.height = (tax_f / max * 100) + "%";
     document.getElementById('b3').style.height = (gap / max * 100) + "%";
 
-    document.getElementById('msg').innerHTML = `✅ 현재 기준 예상 상속세는 <b>${tax_now.toFixed(1)}억</b>원입니다.<br>⚠️ 10년 뒤 자산가치 상승 시 <b>${gap.toFixed(1)}억</b>원의 납부 재원이 부족할 수 있습니다.`;
+    // 6. 가이드 메시지
+    document.getElementById('msg').innerHTML = `✅ 현재 기준 예상 상속세는 <b>${tax_now.toFixed(1)}억</b>원입니다.<br>⚠️ 10년 뒤 자산 가치 상승 시 <b>${gap.toFixed(1)}억</b>원의 세금 재원이 부족할 수 있습니다.`;
 }
 
 async function downloadPDF() {
@@ -171,9 +177,10 @@ async function downloadPDF() {
     const img = canvas.toDataURL('image/png');
     const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
     pdf.addImage(img, 'PNG', 10, 10, 190, (canvas.height * 190 / canvas.width));
-    pdf.save('상속세_분석.pdf');
+    pdf.save('상속세_분석_리포트.pdf');
 }
 
+// 시작 시 초기 계산 실행
 window.onload = update;
 </script>
 </body>
