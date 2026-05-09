@@ -8,78 +8,53 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root { --primary: #1e293b; --accent: #eab308; --danger: #ef4444; --success: #22c55e; --blue: #3b82f6; }
-        body { font-family: 'Pretendard', sans-serif; background: #f1f5f9; padding: 20px; color: #334155; line-height: 1.5; }
-        .container { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 400px 1fr; gap: 20px; }
+        body { font-family: 'Pretendard', sans-serif; background: #f1f5f9; padding: 20px; color: #334155; line-height: 1.5; margin: 0; }
+        
+        /* 데스크탑 레이아웃 (우선 적용) */
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            display: grid; 
+            grid-template-columns: 400px 1fr; 
+            gap: 20px; 
+        }
+        
         .panel { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
         h2 { border-left: 5px solid var(--accent); padding-left: 10px; margin-bottom: 20px; font-size: 1.25rem; }
         
         .input-group { margin-bottom: 12px; }
         label { display: block; font-size: 0.85rem; margin-bottom: 4px; font-weight: 600; color: #64748b; }
-        input[type="number"] { width: 100%; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box; }
+        input[type="number"], select { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
         
-        /* 비교 테이블 스타일 */
-        .compare-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.9rem; }
+        /* 비교 테이블 */
+        .compare-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.9rem; min-width: 300px; }
         .compare-table th { background: #f8fafc; padding: 10px; border: 1px solid #e2e8f0; text-align: center; }
         .compare-table td { padding: 10px; border: 1px solid #e2e8f0; text-align: center; }
         .highlight-blue { color: var(--blue); font-weight: bold; }
         .highlight-red { color: var(--danger); font-weight: bold; }
 
+        /* 차트 */
         .chart-container { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 20px; }
         .chart-area { height: 180px; display: flex; align-items: flex-end; gap: 30px; padding: 20px 40px; border-bottom: 2px solid #e2e8f0; position: relative; }
         .bar { flex: 1; background: #cbd5e1; position: relative; border-radius: 6px 6px 0 0; transition: all 0.5s ease; }
         .bar.active { background: var(--primary); }
         .bar.warning { background: var(--danger); }
-        .bar-label { position: absolute; bottom: -30px; width: 100%; text-align: center; font-size: 0.75rem; font-weight: 600; }
+        .bar-label { position: absolute; bottom: -35px; width: 100%; text-align: center; font-size: 0.75rem; font-weight: 600; }
         .bar-value { position: absolute; top: -25px; width: 100%; text-align: center; font-weight: 800; font-size: 0.85rem; }
 
         .gift-box { background: #f0fdf4; padding: 15px; border-radius: 10px; border: 1px solid var(--success); margin-top: 20px; }
+        .gift-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .pro-tip { background: #fffbeb; border: 1px solid #fef3c7; padding: 15px; border-radius: 8px; font-size: 0.9rem; margin-top: 15px; }
-        .btn-pdf { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%; margin-top: 10px; }
-    
-        /* 모바일 최적화 스타일 추가 */
-        @media (max-width: 850px) {
-            .container {
-                grid-template-columns: 1fr; /* 1컬럼으로 변경 */
-                padding: 10px;
-            }
-            .panel {
-                padding: 15px;
-            }
-            h2 {
-                font-size: 1.1rem;
-            }
-            .compare-table {
-                font-size: 0.8rem;
-                display: block;
-                overflow-x: auto; /* 테이블 가로 스크롤 */
-            }
-            .chart-area {
-                padding: 20px 10px;
-                gap: 15px;
-            }
-            .bar-label {
-                font-size: 0.65rem;
-                bottom: -35px;
-            }
-            .bar-value {
-                font-size: 0.75rem;
-            }
-            .gift-box div[style*="grid-template-columns"] {
-                grid-template-columns: 1fr !important; /* 증여 비교 박스 세로 배치 */
-            }
-            .no-print {
-                margin-bottom: 10px;
-            }
-            input[type="number"], select {
-                font-size: 16px; /* 모바일에서 input 포커스 시 자동 줌 방지 */
-                padding: 10px;
-            }
-            .btn-pdf {
-                padding: 15px;
-                font-size: 1rem;
-            }
-        }
+        .btn-pdf { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%; margin-top: 10px; }
 
+        /* 모바일 최적화 (화면 너비 850px 이하) */
+        @media (max-width: 850px) {
+            .container { grid-template-columns: 1fr; padding: 10px; }
+            .compare-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .gift-grid { grid-template-columns: 1fr; }
+            .chart-area { padding: 20px 10px; gap: 15px; }
+            .bar-label { font-size: 0.65rem; }
+        }
     </style>
 </head>
 <body>
@@ -92,22 +67,18 @@
         <div class="input-group"><label>총 부채 (억 원)</label><input type="number" id="debt" value="5" oninput="update()"></div>
         <div class="input-group"><label>자녀 수 (명)</label><input type="number" id="child_count" value="2" oninput="update()"></div>
         <div class="input-group"><label>미래 자산 상승률 (연 %)</label><input type="number" id="growth" value="3" oninput="update()"></div>
+        
         <div class="input-group">
-            <label>증여 효과 분석 기간 (연도)</label>
+            <label>증여 효과 분석 기간</label>
             <select id="analysis_years" onchange="update()">
-                <option value="1">1년 뒤</option>
-                <option value="2">2년 뒤</option>
-                <option value="3">3년 뒤</option>
-                <option value="4">4년 뒤</option>
-                <option value="5">5년 뒤</option>
-                <option value="6">6년 뒤</option>
-                <option value="7">7년 뒤</option>
-                <option value="8">8년 뒤</option>
-                <option value="9">9년 뒤</option>
-                <option value="10" selected><span id="display_years">10</span>년 뒤</option>
+                <script>
+                    for(let i=1; i<=10; i++) {
+                        document.write(`<option value="${i}" ${i==10?'selected':''}>${i}년 뒤</option>`);
+                    }
+                </script>
             </select>
         </div>
-    
+
         <div class="input-group"><label>준비된 보험금 (억 원)</label><input type="number" id="insurance" value="5" oninput="update()"></div>
         <div class="input-group"><label>즉시 사전증여 제안액 (총액 / 억 원)</label><input type="number" id="gift_plan" value="5" oninput="update()"></div>
 
@@ -120,34 +91,36 @@
     </div>
 
     <div class="panel" id="capture-target">
-        <h2>네이버 @성셈의 상속세 및 증여세 비교 분석 리포트</h2>
+        <h2>네이버 @성셈의 상속세 및 증여세 분석 리포트</h2>
         
-        <table class="compare-table">
-            <thead>
-                <tr>
-                    <th>구분</th>
-                    <th>[A] 배우자 5억 공제</th>
-                    <th>[B] 배우자 법정지분 공제</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>순상속재산</td>
-                    <td id="row_net_a">0억</td>
-                    <td id="row_net_b">0억</td>
-                </tr>
-                <tr>
-                    <td>총 공제액</td>
-                    <td id="row_deduct_a">0억</td>
-                    <td id="row_deduct_b" class="highlight-blue">0억</td>
-                </tr>
-                <tr>
-                    <td><strong>예상 상속세</strong></td>
-                    <td id="row_tax_a" class="highlight-red">0억</td>
-                    <td id="row_tax_b" class="highlight-blue">0억</td>
-                </tr>
-            </tbody>
-        </table>
+        <div class="compare-table-wrapper">
+            <table class="compare-table">
+                <thead>
+                    <tr>
+                        <th>구분</th>
+                        <th>[A] 배우자 5억 공제</th>
+                        <th>[B] 배우자 법정지분 공제</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>순상속재산</td>
+                        <td id="row_net_a">0억</td>
+                        <td id="row_net_b">0억</td>
+                    </tr>
+                    <tr>
+                        <td>총 공제액</td>
+                        <td id="row_deduct_a">0억</td>
+                        <td id="row_deduct_b" class="highlight-blue">0억</td>
+                    </tr>
+                    <tr>
+                        <td><strong>현재 상속세</strong></td>
+                        <td id="row_tax_a" class="highlight-red">0억</td>
+                        <td id="row_tax_b" class="highlight-blue">0억</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
         <div class="chart-container">
             <div class="chart-area">
@@ -159,7 +132,7 @@
 
         <div class="gift-box">
             <h3 style="margin-top:0; font-size: 1rem; color: #166534;">🎁 사전증여 실행 시 상세 효과 (<span id="display_years">10</span>년 뒤 기준)</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="gift-grid">
                 <div style="background:white; padding:10px; border-radius:8px; border:1px solid #d1fae5;">
                     <strong>증여 미실행 시</strong><br>
                     • 미래 상속세: <span id="gift_none_tax">0억</span>
@@ -180,7 +153,6 @@
 </div>
 
 <script>
-// 세액 계산 (누진세율 적용)
 function calculateTax(base) {
     if (base <= 0) return 0;
     if (base <= 1) return base * 0.1;
@@ -191,31 +163,32 @@ function calculateTax(base) {
 }
 
 function update() {
+    // 입력값 로드
     const re = parseFloat(document.getElementById('re_asset').value) || 0;
     const cash = parseFloat(document.getElementById('cash_asset').value) || 0;
     const debt = parseFloat(document.getElementById('debt').value) || 0;
     const childCount = parseInt(document.getElementById('child_count').value) || 0;
     const growth = parseFloat(document.getElementById('growth').value) / 100;
+    const years = parseInt(document.getElementById('analysis_years').value) || 10;
     const insurance = parseFloat(document.getElementById('insurance').value) || 0;
     const giftAmt = parseFloat(document.getElementById('gift_plan').value) || 0;
-    
     const hasSpouse = document.getElementById('has_spouse').checked;
     const isBiz = document.getElementById('biz_deduct').checked;
     const isLive = document.getElementById('live_together').checked;
 
     const netAsset = (re + cash) - debt;
 
-    // 공통 공제 항목
+    // 공제 계산
     const d_base = 5;
     const d_cash = (cash - debt > 0) ? Math.min((cash - debt) * 0.2, 2) : 0;
     const d_etc = (isLive ? Math.min(re * 0.8, 6) : 0) + (isBiz ? 100 : 0);
     const commonDeduct = d_base + d_cash + d_etc;
 
-    // 시나리오 A: 배우자 5억 고정
+    // 시나리오 A (배우자 5억)
     const deductA = commonDeduct + (hasSpouse ? 5 : 0);
     const taxA = calculateTax(netAsset - deductA);
 
-    // 시나리오 B: 배우자 법정지분 (최대 30억)
+    // 시나리오 B (배우자 법정지분)
     let d_spouse_max = 0;
     if (hasSpouse) {
         const ratio = 1.5 / (1.5 + childCount);
@@ -224,33 +197,16 @@ function update() {
     const deductB = commonDeduct + d_spouse_max;
     const taxB = calculateTax(netAsset - deductB);
 
-    // 테이블 업데이트
+    // 결과 텍스트 업데이트
     document.getElementById('row_net_a').innerText = document.getElementById('row_net_b').innerText = netAsset.toFixed(1) + "억";
     document.getElementById('row_deduct_a').innerText = deductA.toFixed(1) + "억";
     document.getElementById('row_deduct_b').innerText = deductB.toFixed(1) + "억";
     document.getElementById('row_tax_a').innerText = taxA.toFixed(1) + "억";
     document.getElementById('row_tax_b').innerText = taxB.toFixed(1) + "억";
-
-    // 미래 세액 시뮬레이션 (B시나리오 기준)
-    /* Logic Updated for Dynamic Years */
-    
-    
-    // 증여세 상세 계산 (자녀 1인당 5천 공제)
-    let totalGiftTax = 0;
-    if (giftAmt > 0) {
-        const perChildGift = giftAmt / (childCount || 1);
-        const taxPerChild = calculateTax(Math.max(0, perChildGift - 0.5));
-        totalGiftTax = taxPerChild * (childCount || 1);
-    }
-    
-    
-    
-    
-    const years = parseInt(document.getElementById('analysis_years').value) || 10;
     document.getElementById('display_years').innerText = years;
     document.getElementById('label_future').innerText = years + "년후 예상";
 
-    // 선택된 기간에 따른 미래 시뮬레이션
+    // 미래 및 증여 계산
     const reFuture = re * Math.pow(1 + growth, years);
     const taxFutureNoGift = calculateTax((reFuture + cash - debt) - deductB);
     
@@ -265,14 +221,12 @@ function update() {
     const taxFutureWithGift = calculateTax((reFutureWithGift + cash - debt) - deductB);
     const saving = taxFutureNoGift - (taxFutureWithGift + totalGiftTax);
 
-
-    // 증여 섹션 업데이트
     document.getElementById('gift_none_tax').innerText = taxFutureNoGift.toFixed(1) + "억";
     document.getElementById('gift_tax_cost').innerText = totalGiftTax.toFixed(2) + "억";
     document.getElementById('gift_done_tax').innerText = taxFutureWithGift.toFixed(1) + "억";
     document.getElementById('total_saving_val').innerText = Math.max(0, saving).toFixed(1);
 
-    // 차트 업데이트
+    // 차트 수치 업데이트
     const gap = Math.max(0, taxFutureNoGift - insurance - cash);
     document.getElementById('val_now').innerText = taxB.toFixed(1) + "억";
     document.getElementById('val_future').innerText = taxFutureNoGift.toFixed(1) + "억";
@@ -283,13 +237,13 @@ function update() {
     document.getElementById('bar_future').style.height = (taxFutureNoGift / maxVal * 100) + "%";
     document.getElementById('bar_gap').style.height = (gap / maxVal * 100) + "%";
 
-    // 가이드 메시지
-    let note = `<strong>[전문가 분석] 본 보고서는 단순 참고용입니다.</strong><br>`;
+    // 컨설팅 메시지
+    let note = `<strong>[전문가 분석]</strong><br>`;
     if (hasSpouse) {
-        note += `✅ 배우자 공제를 법정지분(B)으로 활용 시 시나리오 A 대비 <b>${(taxA - taxB).toFixed(1)}억</b> 절세됩니다.`;
+        note += `✅ 법정지분 상속 시 시나리오 A 대비 <b>${(taxA - taxB).toFixed(1)}억</b> 추가 절세됩니다.`;
     }
     if (saving > 0) {
-        note += `<br>✅ 지금 <b>${giftAmt}억</b>을 증여하면 <span id="display_years">10</span>년 뒤 상속세를 포함한 총 세액을 <b>${saving.toFixed(1)}억</b> 줄일 수 있습니다.`;
+        note += `<br>✅ 지금 <b>${giftAmt}억</b>을 증여하면 ${years}년 뒤 총 세액을 <b>${saving.toFixed(1)}억</b> 더 줄일 수 있습니다.`;
     }
     document.getElementById('consulting_note').innerHTML = note;
 }
@@ -302,10 +256,11 @@ async function downloadPDF() {
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
     pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
-    pdf.save('상속세_증여세_비교리포트.pdf');
+    pdf.save('상속세_분석_리포트.pdf');
 }
 
-update();
+// 초기 로딩 시 계산 실행
+window.onload = update;
 </script>
 </body>
 </html>
